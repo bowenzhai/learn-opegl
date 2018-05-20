@@ -93,6 +93,17 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);  
     // copies the previously defined vertex data into buffer's memory
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+/* 
+    // bind the EBO and copy the indices into the buffer 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+ */
+    // how to interpret vertex data 
+/*  
+    // (attribute, size of attr, type of data, normalize, stride (space between consecutive vertex attribute sets), offset)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+*/
 
     // bind the EBO and copy the indices into the buffer 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
