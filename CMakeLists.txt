@@ -7,6 +7,9 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries")
 set(SOURCES "${SRC_DIR}/window.cpp")
 
+# Set root directory
+configure_file(configuration/root_directory.h.in configuration/root_directory.h)
+
 # Executable definition and properties
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${SRC_DIR}")

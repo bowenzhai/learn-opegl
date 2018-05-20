@@ -3,6 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <filesystem.h>
 #include <shader_s.h>
 
 #include <iostream>
@@ -57,7 +58,7 @@ int main()
         return -1;
     }
 
-    Shader ourShader("/home/bowen/Desktop/OpenGL/source/4.1.texture.vs", "/home/bowen/Desktop/OpenGL/source/4.1.texture.fs"); // you can name your shader files however you like
+    Shader ourShader(FileSystem::getPath("source/shaders/4.1.texture.vs").c_str(), FileSystem::getPath("source/shaders/4.1.texture.fs").c_str()); // you can name your shader files however you like
 /* 
     // verticies for triangle (+ color)
     float vertices[] = {
@@ -121,12 +122,13 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    unsigned int texture1, texture2;
+    int width, height, nrChannels;
 
-    // create texture
-    unsigned int texture;
-    glGenTextures(1, &texture);
+    // create texture 1 
+    glGenTextures(1, &texture1);
     // bind so any subsequent texture commands will configure the currently bound texture
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, texture1);
     // set the texture wrapping/filtering options (on the currently bound texture object)
     // s, t, r are the coordinates for textures
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
@@ -134,8 +136,8 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load the texture
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("/home/bowen/Desktop/OpenGL/source/container.jpg", &width, &height, &nrChannels, 0);
+    stbi_set_flip_vertically_on_load(true); 
+    unsigned char *data = stbi_load(FileSystem::getPath("source/textures/container.jpg").c_str(), &width, &height, &nrChannels, 0);
     if (data) {
         // generate(target, mipmap level, format, w, h, 0, src_format, src_datatype, img_data)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -146,6 +148,39 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
+
+    // create texture 2
+    glGenTextures(1, &texture2);
+    // bind so any subsequent texture commands will configure the currently bound texture
+    glBindTexture(GL_TEXTURE_2D, texture2);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    // s, t, r are the coordinates for textures
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load the texture
+    // tell stb_image.h to flip loaded texture's on the y-axis.
+    data = stbi_load(FileSystem::getPath("source/textures/awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+        // generate(target, mipmap level, format, w, h, 0, src_format, src_datatype, img_data)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+
+    // free the image memory
+    stbi_image_free(data);
+
+    // activate shader before setting uniforms
+    ourShader.use();
+    // either set it manually like so:
+    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+    // or set it via the texture class
+    ourShader.setInt("texture2", 1);
 
     // uncomment this call to draw in wireframe polygons.
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -163,6 +198,11 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // bind textures on corresponding texture units
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
 
         ourShader.use();
 /*     
