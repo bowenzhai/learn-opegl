@@ -61,7 +61,7 @@ int main()
         return -1;
     }
 
-    Shader ourShader(FileSystem::getPath("source/shaders/5.1.transform.vs").c_str(), FileSystem::getPath("source/shaders/5.1.transform.fs").c_str());
+    Shader ourShader(FileSystem::getPath("source/shaders/6.1.coords.vs").c_str(), FileSystem::getPath("source/shaders/6.1.coords.fs").c_str());
 /* 
     // verticies for triangle (+ color)
     float vertices[] = {
@@ -238,11 +238,35 @@ int main()
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
         glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); 
 */
+/*     
         // query the loaction of the uniform
         unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
         // send matrix data to shaders (which, num, transpose?, src)
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+ */
+        // model matrix: rotate on the x-axis
+        glm::mat4 model;
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
+        // view matrix: move the scene backwards
+        glm::mat4 view;
+        // note that we're translating the scene in the reverse direction of where we want to move
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
+
+        // projection matrix: (fov, aspect, near, far)
+        glm::mat4 projection;
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+        // retrieve the matrix uniform locations
+        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
+        unsigned int projectionLoc  = glGetUniformLocation(ourShader.ID, "projection");
+        // pass them to the shaders (2 different ways)
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+        // do not need to be set each frame
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         // glDrawArrays(GL_TRIANGLES, 0, 3);
         // (mode, num elements, typeof indicies, offset)
@@ -258,7 +282,6 @@ int main()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
