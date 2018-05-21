@@ -1,7 +1,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <includes/stb_image.h>
+#include <includes/glm/glm.hpp>
+#include <includes/glm/gtc/matrix_transform.hpp>
+#include <includes/glm/gtc/type_ptr.hpp>
 
 #include <filesystem.h>
 #include <shader_s.h>
@@ -58,7 +61,7 @@ int main()
         return -1;
     }
 
-    Shader ourShader(FileSystem::getPath("source/shaders/4.1.texture.vs").c_str(), FileSystem::getPath("source/shaders/4.1.texture.fs").c_str()); // you can name your shader files however you like
+    Shader ourShader(FileSystem::getPath("source/shaders/5.1.transform.vs").c_str(), FileSystem::getPath("source/shaders/5.1.transform.fs").c_str());
 /* 
     // verticies for triangle (+ color)
     float vertices[] = {
@@ -69,12 +72,21 @@ int main()
     }; 
 */
     // verticies for rectabgle
+    /* 
     float vertices[] = {
         // positions          // colors           // texture coords
          0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
          0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
         -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
         -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+    };
+     */
+    float vertices[] = {
+        // positions          // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
     };
     unsigned int indices[] = {  
         0, 1, 3, // first triangle
@@ -111,6 +123,7 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // how to interpret vertex data 
+/* 
     // position attribute
     // (attribute, size of attr, type of data, normalize, stride (space between consecutive vertex attribute sets), offset)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -121,6 +134,13 @@ int main()
     // texture coord attribute
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
+ */
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     unsigned int texture1, texture2;
     int width, height, nrChannels;
@@ -204,6 +224,12 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        // define the transformation matrix
+        // init to identity matrix
+        glm::mat4 transform;
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); 
+
         ourShader.use();
 /*     
         // update the uniform color
@@ -212,6 +238,10 @@ int main()
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
         glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); 
 */
+        // query the loaction of the uniform
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        // send matrix data to shaders (which, num, transpose?, src)
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         // glDrawArrays(GL_TRIANGLES, 0, 3);
